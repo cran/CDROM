@@ -1,8 +1,8 @@
-819548caf1b106beb9783156c934ea6c *DESCRIPTION
+708311eeb2ad420dc20494e58932c176 *DESCRIPTION
 205c08688fbed6ed5685b47d60b2c9d8 *NAMESPACE
-b78b90a55e76759026881a444e5ba572 *R/CDROM.R
+1656efb9d8ccb8efa4d24027f6d0201b *R/CDROM.R
 e8c891bb3273dbbfb6ea8b142bf81fd0 *inst/extdata/chicken_expr.txt
 3c81064c725743f8e3b2e6f63c83be72 *inst/extdata/human_chicken_dups.txt
 ee50d044f76925461898ead3eb194ed1 *inst/extdata/human_chicken_singles.txt
 854d3ad2e790027c60ffd453faf4d862 *inst/extdata/human_expr.txt
-fb3f77997b3e9e5ed7bf06038c617f91 *man/CDROM.Rd
+d99c30c8427bde34b0c414c24ad579e3 *man/CDROM.Rd

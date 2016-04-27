@@ -12,6 +12,7 @@
 #' @param out the prefix to be used in the names of the three output files. Defaults to 'out'.
 #' @param PC a logical value indicating whether parent and child copies are separated in dupFile. Defaults to FALSE.
 #' @param Ediv the divergence cutoff to be used in classifications. Defaults to semi-interquartile range of the median (SIQR).
+#' @param useAbsExpr a logical value indicating whether absolute or relative expression values are used for Euclidean distance calculations. Defaults to FALSE.
 #' @param head1 a logical value indicating whether exprFile1 contains the names of its variables as the first line. Defaults to TRUE.
 #' @param head2 a logical value indicating whether exprFile2 contains the names of its variables as the first line. Defaults to TRUE.
 #' @param head3 a logical value indicating whether dupFile contains the names of its variables as the first line. Defaults to TRUE.
@@ -38,7 +39,7 @@
 #################################################################################
 
 CDROM <- function(dupFile, singleFile, exprFile1, exprFile2, out = "out", Ediv,  
-	PC = FALSE, head1 = TRUE, head2 = TRUE, head3 = TRUE, head4 = TRUE, legend = "topleft") {
+	PC = FALSE, useAbsExpr = FALSE, head1 = TRUE, head2 = TRUE, head3 = TRUE, head4 = TRUE, legend = "topleft") {
 	
 
 	## General checks are made
@@ -89,6 +90,8 @@ CDROM <- function(dupFile, singleFile, exprFile1, exprFile2, out = "out", Ediv,
 	## Expression data are obtained from expression files
 
 	colnames(expr2) <- colnames(expr1)
+	expr1$zeros <- 0
+	expr2$zeros <- 0
 	expr <- rbind(expr1[! (row.names(expr1) %in% row.names(expr2)), ], expr2)
 
 	P <- dups[[1]]
@@ -96,7 +99,7 @@ CDROM <- function(dupFile, singleFile, exprFile1, exprFile2, out = "out", Ediv,
 	A <- dups[[3]]
 	S1 <- singles[[1]]
 	S2 <- singles[[2]]
-    
+  
 	getP <- expr[row.names(expr) %in% P, ]
 	getC <- expr[row.names(expr) %in% C, ]
 	getA <- expr[row.names(expr) %in% A, ]
@@ -109,25 +112,35 @@ CDROM <- function(dupFile, singleFile, exprFile1, exprFile2, out = "out", Ediv,
 	exprS1 <- data.matrix(getS1[match(S1, rownames(getS1)), ])
 	exprS2 <- data.matrix(getS2[match(S2, rownames(getS2)), ])
 	exprPC <- exprP + exprC
+ 
+  if (useAbsExpr == FALSE) {
+	 
+	  ## Relative expression values are calculated 
+      
+	  relP <- exprP / rowSums(exprP)
+	  relC <- exprC / rowSums(exprC)
+	  relA <- exprA / rowSums(exprA)
+	  relPC <- exprPC / rowSums(exprPC)
+	  relS1 <- exprS1 / rowSums(exprS1)
+	  relS2 <- exprS2 / rowSums(exprS2)
     
-
-	## Relative expression values are calculated 
+	  ## Euclidean distances are calculated
     
-	relP <- exprP / rowSums(exprP)
-	relC <- exprC / rowSums(exprC)
-	relA <- exprA / rowSums(exprA)
-	relPC <- exprPC / rowSums(exprPC)
-	relS1 <- exprS1 / rowSums(exprS1)
-	relS2 <- exprS2 / rowSums(exprS2)
-    
-
-	## Euclidean distances are calculated
-    
-	eucPA <- (rowSums((relP - relA) ^ 2)) ^ (1/2)
-	eucCA <- (rowSums((relC - relA) ^ 2)) ^ (1/2)
-	eucPCA <- (rowSums((relPC - relA) ^ 2)) ^ (1/2)
-	eucS1S2 <- (rowSums((relS1 - relS2) ^ 2)) ^ (1/2)
-    
+	  eucPA <- (rowSums((relP - relA) ^ 2)) ^ (1/2)
+	  eucCA <- (rowSums((relC - relA) ^ 2)) ^ (1/2)
+	  eucPCA <- (rowSums((relPC - relA) ^ 2)) ^ (1/2)
+	  eucS1S2 <- (rowSums((relS1 - relS2) ^ 2)) ^ (1/2)
+  }
+  
+	if (useAbsExpr == TRUE) {
+	  
+	  ## Euclidean distances are calculated
+	  
+	  eucPA <- (rowSums((exprP - exprA) ^ 2)) ^ (1/2)
+	  eucCA <- (rowSums((exprC - exprA) ^ 2)) ^ (1/2)
+	  eucPCA <- (rowSums((exprPC - exprA) ^ 2)) ^ (1/2)
+	  eucS1S2 <- (rowSums((exprS1 - exprS2) ^ 2)) ^ (1/2)
+	}
 
 	## Ediv is calculated 
     
@@ -185,11 +198,23 @@ CDROM <- function(dupFile, singleFile, exprFile1, exprFile2, out = "out", Ediv,
 		Yrange <- (Ymax - 0)
 		Xrange <- (Xmax - Xmin)
 
+		if (useAbsExpr == FALSE) {
+			upperY <- (Ymax + (0.05 * Yrange))
+			lowerX <- (Xmin - (0.02 * Xrange))
+			upperX <- (Xmax + (0.02 * Xrange))
+		}
+
+		if (useAbsExpr == TRUE) {
+			upperY <- (Ymax + (0.05 * Yrange))			
+			upperX <- (20 * IQR(eucS1S2, na.rm = TRUE))
+			lowerX <- -IQR(eucS1S2, na.rm = TRUE)
+		}
+
 	    png(filename = paste0(out, ".png"), width = 700, height = 700)
     	par(mar = c(4, 5, 1, 1), cex.axis = 1.4, cex.lab = 2)
 		plot(densS1S2, col = "black", main = "", xlab = "Euclidean Distance", ylab = "", 
-			lwd = 6, mgp = c(3, 1, 0), yaxt = "n", ylim = c(0, Ymax + (0.05 * Yrange)), 
-			xlim = c(Xmin - (0.02 * Xrange), Xmax + (0.02 * Xrange)), xaxs = "i", yaxs = "i")
+			lwd = 6, mgp = c(3, 1, 0), yaxt = "n", ylim = c(0, upperY), 
+			xlim = c(lowerX, upperX), xaxs = "i", yaxs = "i")
 		lines(densBoth, col = "green3", lwd = 6)
 		lines(densPCA, col = "purple3", lwd = 6)
 		abline(v = Ediv, col = "grey50", lty = 2, lwd = 4)
@@ -325,12 +350,24 @@ CDROM <- function(dupFile, singleFile, exprFile1, exprFile2, out = "out", Ediv,
 
 		Yrange <- (Ymax - 0)
 		Xrange <- (Xmax - Xmin)
+		
+		if (useAbsExpr == FALSE) {
+			upperY <- (Ymax + (0.05 * Yrange))
+			lowerX <- (Xmin - (0.02 * Xrange))
+			upperX <- (Xmax + (0.02 * Xrange))
+		}
+
+		if (useAbsExpr == TRUE) {
+			upperY <- (Ymax + (0.05 * Yrange))			
+			upperX <- (20 * IQR(eucS1S2, na.rm = TRUE))
+			lowerX <- -IQR(eucS1S2, na.rm = TRUE)
+		}
 
     	png(filename = paste0(out, ".png"), width = 700, height = 700)
     	par(mar = c(4, 5, 1, 1), cex.axis = 1.4, cex.lab = 2)
 		plot(densS1S2, col = "black", main = "", xlab = "Euclidean Distance", ylab = "", 
-			lwd = 6, mgp = c(3, 1, 0), yaxt = "n", ylim = c(0, Ymax + (0.05 * Yrange)), 
-			xlim = c(Xmin - (0.02 * Xrange), Xmax + (0.02 * Xrange)), xaxs = "i", yaxs = "i")
+			lwd = 6, mgp = c(3, 1, 0), yaxt = "n", ylim = c(0, upperY), 
+			xlim = c(lowerX, upperX), xaxs = "i", yaxs = "i")
 		lines(densCA, col = "red", lwd = 6)
 		lines(densPA, col = "blue3", lwd = 6)
 		lines(densPCA, col = "purple3", lwd = 6)

@@ -5,8 +5,8 @@
 \title{CDROM: Classification of Duplicate gene RetentiOn Mechanisms}
 \usage{
 CDROM(dupFile, singleFile, exprFile1, exprFile2, out = "out", Ediv,
-  PC = FALSE, head1 = TRUE, head2 = TRUE, head3 = TRUE, head4 = TRUE,
-  legend = "topleft")
+  PC = FALSE, useAbsExpr = FALSE, head1 = TRUE, head2 = TRUE,
+  head3 = TRUE, head4 = TRUE, legend = "topleft")
 }
 \arguments{
 \item{dupFile}{a tab-separated file containing duplicate gene pairs and their orthologs (three gene IDs per line).}
@@ -22,6 +22,8 @@ CDROM(dupFile, singleFile, exprFile1, exprFile2, out = "out", Ediv,
 \item{Ediv}{the divergence cutoff to be used in classifications. Defaults to semi-interquartile range of the median (SIQR).}
 
 \item{PC}{a logical value indicating whether parent and child copies are separated in dupFile. Defaults to FALSE.}
+
+\item{useAbsExpr}{a logical value indicating whether absolute or relative expression values are used for Euclidean distance calculations. Defaults to FALSE.}
 
 \item{head1}{a logical value indicating whether exprFile1 contains the names of its variables as the first line. Defaults to TRUE.}
 
